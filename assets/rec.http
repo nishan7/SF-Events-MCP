@@ -1,7 +1,0 @@
-### SF Rec & Park events via FastMCP REST bridge
-POST http://127.0.0.1:61103/mcp/tool/fetch_rec_events
-Content-Type: application/json
-
-{
-  "limit": 3
-}
