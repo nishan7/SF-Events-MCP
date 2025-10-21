@@ -1,7 +1,4 @@
 # Environment configuration for instacart-chatgpt agents
 # Copy this file to .env and fill in the required values.
 
-OPENAI_API_KEY=sk-...
-INSTACART_API_TOKEN=
-LLM_MODEL=gpt-4.1
-LOG_LEVEL=INFO
+APPTOKEN=STkpW9v5bxHaghK4Y5nmp3BzC
