@@ -616,12 +616,10 @@ def format_event_card(event: dict[str, Any]) -> dict[str, Any]:
 @cache
 def _load_widget_html() -> str:
     """Load the widget HTML from the built component."""
-    component_path = (
-        Path(__file__).resolve().parent.parent.parent.parent
-        / "web"
-        / "dist"
-        / "component.js"
-    )
+    dist_dir = Path(__file__).resolve().parent.parent.parent.parent / "web" / "dist"
+    component_path = dist_dir / "component.js"
+    css_path = dist_dir / "component.css"
+
     if not component_path.exists():
         raise FileNotFoundError(
             f'Widget component not found at {component_path}. '
@@ -629,6 +627,7 @@ def _load_widget_html() -> str:
         )
 
     component_code = component_path.read_text(encoding="utf8")
+    component_css = css_path.read_text(encoding="utf8") if css_path.exists() else ""
 
     return f'''
         <!DOCTYPE html>
@@ -642,6 +641,7 @@ def _load_widget_html() -> str:
                     padding: 0;
                     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
                 }}
+                {component_css}
             </style>
         </head>
         <body>
