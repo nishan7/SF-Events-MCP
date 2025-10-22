@@ -21,10 +21,38 @@ interface EventCard {
   distance_km?: number;
   description?: string;
   registration_url?: string;
+  details_url?: string;
+  more_info?: string;
   coordinates?: {
     lat: number;
     lng: number;
   };
+}
+
+interface EventMapData {
+  markers: Array<{
+    title?: string;
+    category?: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
+    };
+    location?: {
+      name?: string;
+      neighborhood?: string;
+      address?: string;
+    };
+    details_url?: string;
+  }>;
+  center: {
+    lat: number;
+    lng: number;
+  };
+  defaultCenter: {
+    lat: number;
+    lng: number;
+  };
+  markerCount: number;
 }
 
 interface EventsResponse {
@@ -34,6 +62,7 @@ interface EventsResponse {
     from_cache: boolean;
   };
   events: EventCard[];
+  map?: EventMapData;
 }
 
 export default function MapView() {
@@ -45,6 +74,10 @@ export default function MapView() {
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<EventCard | null>(null);
   const popupRef = useRef<mapboxgl.Popup | null>(null);
+  const mapData = toolOutput?.map;
+  const initialCenterRef = useRef<{ lat: number; lng: number }>(
+    mapData?.center ?? mapData?.defaultCenter ?? { lat: 37.7749, lng: -122.4194 }
+  );
 
   const containerStyle: React.CSSProperties = {
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -86,7 +119,7 @@ export default function MapView() {
     const map = new mapboxgl.Map({
       container: mapRef.current,
       style: isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v12',
-      center: [-122.4194, 37.7749], // San Francisco
+      center: [initialCenterRef.current.lng, initialCenterRef.current.lat],
       zoom: 12,
     });
 
@@ -101,6 +134,18 @@ export default function MapView() {
     };
   }, [isDark]);
 
+  useEffect(() => {
+    if (!mapInstance.current) return;
+    const center = mapData?.center;
+    if (!center) return;
+
+    mapInstance.current.flyTo({
+      center: [center.lng, center.lat],
+      zoom: Math.max(mapInstance.current.getZoom(), 12),
+      speed: 0.8,
+    });
+  }, [mapData?.center?.lat, mapData?.center?.lng]);
+
   // Add markers for events
   useEffect(() => {
     if (!mapInstance.current || !toolOutput?.events) return;
@@ -109,51 +154,54 @@ export default function MapView() {
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
 
-    const eventsWithCoords = toolOutput.events.filter(e => e.coordinates);
+    const eventsWithCoords = toolOutput.events.filter(
+      (e): e is EventCard & { coordinates: { lat: number; lng: number } } => Boolean(e.coordinates)
+    );
+    const markerItems = (mapData?.markers ?? []).filter(
+      (m): m is Required<EventMapData['markers'][number]> => Boolean(m.coordinates)
+    );
+    const markersSource = markerItems.length > 0 ? markerItems : eventsWithCoords;
 
-    if (eventsWithCoords.length === 0) return;
+    if (markersSource.length === 0) return;
 
-    // Add markers
-    eventsWithCoords.forEach((event) => {
-      const el = document.createElement('div');
-      el.style.width = '30px';
-      el.style.height = '30px';
-      el.style.borderRadius = '50% 50% 50% 0';
-      el.style.backgroundColor = '#1976d2';
-      el.style.border = '2px solid white';
-      el.style.transform = 'rotate(-45deg)';
-      el.style.cursor = 'pointer';
-      el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+    const createdMarkers: mapboxgl.Marker[] = [];
 
-      const marker = new mapboxgl.Marker({ element: el })
-        .setLngLat([event.coordinates!.lng, event.coordinates!.lat])
+    markersSource.forEach((item, idx) => {
+      const coordinates = item.coordinates as { lat: number; lng: number };
+
+      const marker = new mapboxgl.Marker({ color: '#1976d2' })
+        .setLngLat([coordinates.lng, coordinates.lat])
         .addTo(mapInstance.current!);
 
-      el.addEventListener('click', () => {
-        setSelectedEvent(event);
+      const markerElement = marker.getElement();
+      markerElement.style.cursor = 'pointer';
 
-        // Close existing popup
+      markerElement.addEventListener('click', () => {
+        const matchingEvent = eventsWithCoords.find(
+          e => e.coordinates?.lat === coordinates.lat && e.coordinates?.lng === coordinates.lng
+        );
+        if (matchingEvent) {
+          setSelectedEvent(matchingEvent);
+        }
+
         if (popupRef.current) {
           popupRef.current.remove();
         }
 
-        // Create popup content
+        const displayData: any = matchingEvent ?? item;
+        const detailsUrl = displayData.details_url || displayData.registration_url || displayData.more_info;
+
         const popupContent = document.createElement('div');
         popupContent.innerHTML = `
           <div style="padding: 8px; max-width: 250px;">
             <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">
-              ${event.category ? getCategoryEmoji(event.category) + ' ' : ''}${event.title}
+              ${displayData.category ? `${getCategoryEmoji(displayData.category)} ` : ''}${displayData.title ?? ''}
             </h3>
             <div style="font-size: 14px; color: #666; margin-bottom: 8px;">
-              📍 ${event.location.name}${event.location.neighborhood ? ` (${event.location.neighborhood})` : ''}
+              📍 ${displayData.location?.name ?? ''}${displayData.location?.neighborhood ? ` (${displayData.location?.neighborhood})` : ''}
             </div>
-            ${event.distance_km ? `
-              <div style="font-size: 14px; color: #666; margin-bottom: 8px;">
-                📏 ${(event.distance_km * 0.621371).toFixed(2)} miles away
-              </div>
-            ` : ''}
-            ${event.registration_url ? `
-              <button id="info-btn-${event.coordinates!.lat}" style="
+            ${detailsUrl ? `
+              <button id="info-btn-${idx}" style="
                 margin-top: 8px;
                 padding: 8px 16px;
                 background-color: #1976d2;
@@ -169,48 +217,36 @@ export default function MapView() {
         `;
 
         const popup = new mapboxgl.Popup({ offset: 25 })
-          .setLngLat([event.coordinates!.lng, event.coordinates!.lat])
+          .setLngLat([coordinates.lng, coordinates.lat])
           .setDOMContent(popupContent)
           .addTo(mapInstance.current!);
 
         popupRef.current = popup;
 
-        // Add event listener to button
-        if (event.registration_url) {
+        if (detailsUrl) {
           setTimeout(() => {
-            const btn = document.getElementById(`info-btn-${event.coordinates!.lat}`);
+            const btn = document.getElementById(`info-btn-${idx}`);
             if (btn) {
               btn.addEventListener('click', () => {
-                window.openai?.openExternal({ href: event.registration_url! });
+                window.openai?.openExternal({ href: detailsUrl });
               });
             }
           }, 0);
         }
-
-        // Highlight marker
-        el.style.backgroundColor = '#f44336';
-        el.style.width = '36px';
-        el.style.height = '36px';
-
-        popup.on('close', () => {
-          el.style.backgroundColor = '#1976d2';
-          el.style.width = '30px';
-          el.style.height = '30px';
-        });
       });
 
-      markersRef.current.push(marker);
+      createdMarkers.push(marker);
     });
 
-    // Fit map to markers
-    if (eventsWithCoords.length > 0) {
-      const bounds = new mapboxgl.LngLatBounds();
-      eventsWithCoords.forEach(event => {
-        bounds.extend([event.coordinates!.lng, event.coordinates!.lat]);
-      });
-      mapInstance.current.fitBounds(bounds, { padding: 60, maxZoom: 14 });
-    }
-  }, [toolOutput, isDark]);
+    markersRef.current = createdMarkers;
+
+    const bounds = new mapboxgl.LngLatBounds();
+    markersSource.forEach(item => {
+      const coordinates = item.coordinates as { lat: number; lng: number };
+      bounds.extend([coordinates.lng, coordinates.lat]);
+    });
+    mapInstance.current.fitBounds(bounds, { padding: 60, maxZoom: 14 });
+  }, [toolOutput, mapData?.markerCount, isDark]);
 
   function getCategoryEmoji(category: string): string {
     if (category.includes('Sport')) return '⚽';
@@ -232,6 +268,7 @@ export default function MapView() {
 
   const { summary, events } = toolOutput;
   const eventsWithCoords = events.filter(e => e.coordinates);
+  const mapEventsCount = mapData?.markerCount ?? eventsWithCoords.length;
 
   if (eventsWithCoords.length === 0) {
     return (
@@ -255,7 +292,7 @@ export default function MapView() {
           🗺️ SF Recreation & Parks Events
         </h2>
         <div style={{ fontSize: '14px', color: isDark ? '#b0b0b0' : '#666' }}>
-          Showing {eventsWithCoords.length} events on map
+          Showing {mapEventsCount} events on map
         </div>
       </div>
 

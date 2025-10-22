@@ -1,10 +1,9 @@
 import asyncio
+import json
 from pprint import pprint
 
 from fastmcp import Client
 from fastmcp.client.client import CallToolResult
-import json
-from src.instacart_chatgpt.services.fastmcp_rec_events import mcp
 
 config = {
     "mcpServers": {

@@ -16,10 +16,38 @@ interface EventCard {
   distance_km?: number;
   description?: string;
   registration_url?: string;
+  details_url?: string;
+  more_info?: string;
   coordinates?: {
     lat: number;
     lng: number;
   };
+}
+
+interface EventMapData {
+  markers: Array<{
+    title?: string;
+    category?: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
+    };
+    location?: {
+      name?: string;
+      neighborhood?: string;
+      address?: string;
+    };
+    details_url?: string;
+  }>;
+  center: {
+    lat: number;
+    lng: number;
+  };
+  defaultCenter: {
+    lat: number;
+    lng: number;
+  };
+  markerCount: number;
 }
 
 interface EventsResponse {
@@ -29,6 +57,7 @@ interface EventsResponse {
     from_cache: boolean;
   };
   events: EventCard[];
+  map?: EventMapData;
 }
 
 function formatDate(dateStr: string): string {
@@ -49,9 +78,7 @@ function formatDate(dateStr: string): string {
 function EventCardComponent({ event }: { event: EventCard }) {
   const theme = useTheme();
   const isDark = theme === 'dark';
-
-  // Convert km to miles
-  const distanceInMiles = event.distance_km ? (event.distance_km * 0.621371).toFixed(2) : null;
+  const detailsUrl = event.details_url || event.registration_url || event.more_info;
 
   const cardStyle: React.CSSProperties = {
     backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
@@ -62,13 +89,13 @@ function EventCardComponent({ event }: { event: EventCard }) {
     boxShadow: isDark
       ? '0 2px 8px rgba(0,0,0,0.3)'
       : '0 2px 8px rgba(0,0,0,0.1)',
-    cursor: event.registration_url ? 'pointer' : 'default',
+    cursor: detailsUrl ? 'pointer' : 'default',
     transition: 'transform 0.2s, box-shadow 0.2s',
   };
 
   const handleCardClick = () => {
-    if (event.registration_url) {
-      window.openai?.openExternal({ href: event.registration_url });
+    if (detailsUrl) {
+      window.openai?.openExternal({ href: detailsUrl });
     }
   };
 
@@ -114,7 +141,7 @@ function EventCardComponent({ event }: { event: EventCard }) {
       style={cardStyle}
       onClick={handleCardClick}
       onMouseEnter={(e) => {
-        if (event.registration_url) {
+        if (detailsUrl) {
           e.currentTarget.style.transform = 'translateY(-2px)';
           e.currentTarget.style.boxShadow = isDark
             ? '0 4px 12px rgba(0,0,0,0.4)'
@@ -122,7 +149,7 @@ function EventCardComponent({ event }: { event: EventCard }) {
         }
       }}
       onMouseLeave={(e) => {
-        if (event.registration_url) {
+        if (detailsUrl) {
           e.currentTarget.style.transform = 'translateY(0)';
           e.currentTarget.style.boxShadow = isDark
             ? '0 2px 8px rgba(0,0,0,0.3)'
@@ -163,13 +190,6 @@ function EventCardComponent({ event }: { event: EventCard }) {
         </div>
       )}
 
-      {distanceInMiles && (
-        <div style={sectionStyle}>
-          <span style={labelStyle}>Distance:</span>
-          {distanceInMiles} miles away
-        </div>
-      )}
-
       {event.description && (
         <div style={sectionStyle}>
           <span style={labelStyle}>Details:</span>
@@ -177,15 +197,15 @@ function EventCardComponent({ event }: { event: EventCard }) {
         </div>
       )}
 
-      {event.registration_url && (
+      {detailsUrl && (
         <div style={{ marginTop: '12px' }}>
           <a
-            href={event.registration_url}
+            href={detailsUrl}
             style={linkStyle}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              window.openai?.openExternal({ href: event.registration_url! });
+              window.openai?.openExternal({ href: detailsUrl });
             }}
           >
             More Info ↗
