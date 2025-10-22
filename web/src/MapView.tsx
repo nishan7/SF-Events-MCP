@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useToolOutput, useTheme } from './hooks';
+import Logo from './Logo';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
@@ -91,6 +92,12 @@ export default function MapView() {
     marginBottom: '20px',
     paddingBottom: '12px',
     borderBottom: `2px solid ${isDark ? '#333' : '#e5e5e5'}`,
+  };
+
+  const headerRowStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px',
   };
 
   const mapContainerStyle: React.CSSProperties = {
@@ -274,9 +281,14 @@ export default function MapView() {
     return (
       <div style={containerStyle}>
         <div style={headerStyle}>
-          <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: '600' }}>
-            SF Recreation & Parks Events - Map View
-          </h2>
+          <div style={headerRowStyle}>
+            <Logo size={44} />
+            <div>
+              <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: '600' }}>
+                SF Recreation & Parks Events - Map View
+              </h2>
+            </div>
+          </div>
         </div>
         <p style={{ textAlign: 'center', color: isDark ? '#999' : '#666' }}>
           No events with location data available.
@@ -288,11 +300,16 @@ export default function MapView() {
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
-        <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: '600' }}>
-          🗺️ SF Recreation & Parks Events
-        </h2>
-        <div style={{ fontSize: '14px', color: isDark ? '#b0b0b0' : '#666' }}>
-          Showing {mapEventsCount} events on map
+        <div style={headerRowStyle}>
+          <Logo size={44} />
+          <div>
+            <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: '600' }}>
+              🗺️ SF Recreation & Parks Events
+            </h2>
+            <div style={{ fontSize: '14px', color: isDark ? '#b0b0b0' : '#666' }}>
+              Showing {mapEventsCount} events on map
+            </div>
+          </div>
         </div>
       </div>
 

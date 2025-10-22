@@ -1,5 +1,6 @@
 import React from 'react';
 import { useToolOutput, useTheme } from './hooks';
+import Logo from './Logo';
 
 interface EventCard {
   title: string;
@@ -235,6 +236,12 @@ export default function SFEventsComponent() {
     borderBottom: `2px solid ${isDark ? '#333' : '#e5e5e5'}`,
   };
 
+  const headerRowStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px',
+  };
+
   const summaryStyle: React.CSSProperties = {
     fontSize: '14px',
     color: isDark ? '#b0b0b0' : '#666',
@@ -256,12 +263,17 @@ export default function SFEventsComponent() {
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
-        <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: '600' }}>
-          SF Recreation & Parks Events
-        </h2>
-        <div style={summaryStyle}>
-          Showing {summary.showing} of {summary.total_found} events
-          {summary.from_cache && ' (cached)'}
+        <div style={headerRowStyle}>
+          <Logo size={44} />
+          <div>
+            <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: '600' }}>
+              SF Recreation & Parks Events
+            </h2>
+            <div style={summaryStyle}>
+              Showing {summary.showing} of {summary.total_found} events
+              {summary.from_cache && ' (cached)'}
+            </div>
+          </div>
         </div>
       </div>
 
