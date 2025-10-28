@@ -21,9 +21,9 @@ from fastmcp.tools.tool import ToolResult
 from mcp.types import EmbeddedResource, TextContent, TextResourceContents
 from pydantic import Field
 
-from src.instacart_chatgpt.services.events import config
-from src.instacart_chatgpt.services.events.filtering import EventFilter
-from src.instacart_chatgpt.services.events.models import (
+from src.mcp.services.events import config
+from src.mcp.services.events.filtering import EventFilter
+from src.mcp.services.events.models import (
     Coordinates,
     EventCard,
     EventDates,
