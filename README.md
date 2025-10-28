@@ -3,7 +3,7 @@
 A small FastMCP server and custom web widget for browsing upcoming San Francisco Recreation & Parks events. The Python service exposes an MCP tool (`search_sf_events`) over HTTP and serves an embeddable UI widget built with React/TypeScript.
 
 ## Features
-- HTTP MCP server with `search_sf_events` and `clear_cache` tools
+- HTTP MCP server with `search_sf_events`
 - Event filtering by dates, category, neighborhood, proximity, and free-text
 - Embeddable results UI (cards + map view) compiled to a single widget
 - Simple caching layer to reduce API calls
@@ -86,11 +86,6 @@ For exact behavior and returned structure, see:
 - `web/` — React/TypeScript widget (bundled with esbuild to `web/dist`)
 - `requirements.txt` — Python deps (FastMCP, Uvicorn, httpx, etc.)
 - `env` — dotenv-style config loaded by the server
-
-## Contributing
-- Follow PEP 8, add concise docstrings for public methods
-- Use Conventional Commits (e.g., `feat(server): add radius filtering`)
-- Include tests and documentation updates with your changes
 
 ---
 
