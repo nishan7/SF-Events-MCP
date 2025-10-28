@@ -249,7 +249,7 @@ async def _fetch_events(
                     params=params,
                     headers={
                         "Accept": "application/json",
-                        "X-App-Token": os.getenv("APPTOKEN", "STkpW9v5bxHaghK4Y5nmp3BzC"),
+                        "X-App-Token": os.getenv("APPTOKEN", ""),
                     },
                 )
                 response.raise_for_status()

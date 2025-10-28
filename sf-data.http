@@ -1,7 +1,2 @@
-### GET request to example server
-GET https://data.sfgov.org/api/v3/views/8i3s-ih2a/query.json
-headers:
-  Accept: application/json
-  X-App-Token: STkpW9v5bxHaghK4Y5nmp3BzC
 
 ###
